@@ -3,12 +3,12 @@ import ssl
 import logging
 import xmlrpc.client
 
-from flask import _app_ctx_stack, current_app
+from flask import g as ctx, current_app
 
 from .model import make_model_base
 from . import types
 
-__version__ = "0.4.2"
+__version__ = "0.5.2"
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ class Odoo:
         app.teardown_appcontext(self.teardown)
 
     def teardown(self, exception):
-        ctx = _app_ctx_stack.top
         for name in ["odoo_common", "odoo_object"]:
             server_proxy = getattr(ctx, name, None)
             if server_proxy:
@@ -60,8 +59,7 @@ class Odoo:
         return xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common")
 
     @property
-    def common(self):
-        ctx = _app_ctx_stack.top
+    def common(self):        
         if ctx is not None:
             if not hasattr(ctx, "odoo_common"):
                 ctx.odoo_common = self.create_common_proxy()
@@ -76,8 +74,7 @@ class Odoo:
         return uid
 
     @property
-    def uid(self):
-        ctx = _app_ctx_stack.top
+    def uid(self):        
         if ctx is not None:
             if not hasattr(ctx, "odoo_uid"):
                 ctx.odoo_uid = self.authenticate()
@@ -90,7 +87,6 @@ class Odoo:
 
     @property
     def object(self):
-        ctx = _app_ctx_stack.top
         if ctx is not None:
             if not hasattr(ctx, "odoo_object"):
                 ctx.odoo_object = self.create_object_proxy()
